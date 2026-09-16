@@ -1,0 +1,14 @@
+{
+  "name": "buku-data-travel-treehouse",
+  "version": "1.0.0",
+  "description": "Buku Data Travel Treehouse - pencatatan data kartu pribadi dengan login admin",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "exceljs": "^4.4.0"
+  }
+}

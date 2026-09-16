@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buku Data Travel Treehouse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="title-block">
+      <h1>Buku Data Travel Treehouse</h1>
+      <p>Catat kartu, hitung otomatis rapi, ekspor ke Excel kapan saja.</p>
+    </div>
+    <div class="top-actions">
+      <span class="count-tag" id="countTag">0 data tersimpan</span>
+      <button class="primary" id="exportBtn">Ekspor ke Excel</button>
+      <button class="ghost" id="logoutBtn">Keluar</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <section class="card form-card">
+      <h2 id="formTitle">Tambah data</h2>
+      <p class="sub" id="formSub">Isi field di bawah lalu simpan.</p>
+
+      <form id="entryForm">
+        <label for="f_no">No</label>
+        <input type="text" id="f_no" placeholder="Contoh: A1">
+
+        <label for="f_nama">Nama</label>
+        <input type="text" id="f_nama" placeholder="Nama pemilik kartu" required>
+
+        <label for="f_travel">Travel</label>
+        <input type="text" id="f_travel" placeholder="Nama travel">
+
+        <label for="f_telepon">No HP / Telepon</label>
+        <input type="tel" id="f_telepon" placeholder="08xx-xxxx-xxxx">
+
+        <label for="f_bank">Bank</label>
+        <input type="text" id="f_bank" placeholder="Contoh: BCA">
+
+        <label for="f_foto">Foto</label>
+        <div class="photo-drop" id="photoDrop">
+          <span id="photoLabel">Klik untuk unggah foto</span>
+        </div>
+        <input type="file" id="f_foto" accept="image/*">
+
+        <label for="f_ket">Keterangan</label>
+        <textarea id="f_ket" placeholder="Catatan tambahan (opsional)"></textarea>
+
+        <div class="form-actions">
+          <button type="submit" class="primary" id="saveBtn">Simpan data</button>
+          <button type="button" class="ghost" id="cancelBtn" style="display:none;">Batal</button>
+        </div>
+      </form>
+    </section>
+
+    <section>
+      <div class="table-toolbar">
+        <input type="text" id="searchBox" placeholder="Cari nama, travel, no HP...">
+        <span class="count-tag" id="filterTag"></span>
+      </div>
+
+      <div class="ledger">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:60px;">No</th>
+              <th>Nama</th>
+              <th>Travel</th>
+              <th>No HP/Telepon</th>
+              <th>Bank</th>
+              <th style="width:70px;">Foto</th>
+              <th>Keterangan</th>
+              <th style="width:120px;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <span class="mark">Belum ada data</span>
+        Tambahkan data pertama lewat form di sebelah kiri.
+      </div>
+    </section>
+  </div>
+
+  <footer class="note">
+    Data disimpan di server (database pribadi kamu) — bisa diakses dari HP, laptop, atau perangkat lain selama login sebagai admin.
+  </footer>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <img id="lightboxImg" src="" alt="Foto diperbesar">
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="/app.js"></script>
+</body>
+</html>
