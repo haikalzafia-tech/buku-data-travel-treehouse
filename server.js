@@ -76,6 +76,28 @@ app.get("/api/session", (req, res) => {
   });
 });
 
+// ---- Change admin username / password ----
+app.post("/api/change-password", requireAuth, (req, res) => {
+  const { currentPassword, newUsername, newPassword } = req.body || {};
+  const config = readConfig();
+
+  if (!currentPassword || currentPassword !== config.password) {
+    return res.status(401).json({ error: "Password saat ini salah." });
+  }
+  if (!newPassword || newPassword.length < 4) {
+    return res.status(400).json({ error: "Password baru minimal 4 karakter." });
+  }
+
+  config.username = (newUsername || config.username || "admin").trim();
+  config.password = newPassword;
+  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
+
+  // Selesai ganti password, minta login ulang demi keamanan.
+  req.session.destroy(() => {
+    res.json({ ok: true });
+  });
+});
+
 // ---- Entries CRUD (this is the "database pribadi") ----
 app.get("/api/entries", requireAuth, (req, res) => {
   res.json(readDB().entries);

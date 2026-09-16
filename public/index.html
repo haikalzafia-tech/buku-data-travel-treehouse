@@ -21,6 +21,7 @@
     <div class="top-actions">
       <span class="count-tag" id="countTag">0 data tersimpan</span>
       <button class="primary" id="exportBtn">Ekspor ke Excel</button>
+      <button class="ghost" id="passwordBtn">Ganti password</button>
       <button class="ghost" id="logoutBtn">Keluar</button>
     </div>
   </header>
@@ -100,6 +101,35 @@
 <div class="lightbox" id="lightbox">
   <img id="lightboxImg" src="" alt="Foto diperbesar">
 </div>
+
+<div class="modal-overlay" id="passwordModal">
+  <div class="modal-card">
+    <h2>Ganti password admin</h2>
+    <p class="sub">Setelah berhasil, kamu akan otomatis logout dan perlu login ulang.</p>
+
+    <form id="passwordForm">
+      <label for="pw_current">Password saat ini</label>
+      <input type="password" id="pw_current" required>
+
+      <label for="pw_username">Username baru</label>
+      <input type="text" id="pw_username" placeholder="Kosongkan jika tidak diubah">
+
+      <label for="pw_new">Password baru</label>
+      <input type="password" id="pw_new" required minlength="4">
+
+      <label for="pw_confirm">Ulangi password baru</label>
+      <input type="password" id="pw_confirm" required minlength="4">
+
+      <div id="passwordError" class="login-error" style="display:none;"></div>
+
+      <div class="form-actions">
+        <button type="submit" class="primary" id="passwordSaveBtn">Simpan password baru</button>
+        <button type="button" class="ghost" id="passwordCancelBtn">Batal</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="/app.js"></script>

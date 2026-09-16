@@ -61,6 +61,72 @@
     });
   });
 
+  // ---- Ganti password ----
+  var passwordModal = document.getElementById("passwordModal");
+  var passwordForm = document.getElementById("passwordForm");
+  var passwordError = document.getElementById("passwordError");
+  var passwordSaveBtn = document.getElementById("passwordSaveBtn");
+
+  document.getElementById("passwordBtn").addEventListener("click", function () {
+    passwordForm.reset();
+    passwordError.style.display = "none";
+    passwordModal.classList.add("open");
+  });
+
+  document.getElementById("passwordCancelBtn").addEventListener("click", function () {
+    passwordModal.classList.remove("open");
+  });
+
+  passwordModal.addEventListener("click", function (ev) {
+    if (ev.target === passwordModal) passwordModal.classList.remove("open");
+  });
+
+  passwordForm.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var currentPassword = document.getElementById("pw_current").value;
+    var newUsername = document.getElementById("pw_username").value.trim();
+    var newPassword = document.getElementById("pw_new").value;
+    var confirmPassword = document.getElementById("pw_confirm").value;
+
+    passwordError.style.display = "none";
+
+    if (newPassword !== confirmPassword) {
+      passwordError.textContent = "Konfirmasi password baru tidak cocok.";
+      passwordError.style.display = "block";
+      return;
+    }
+
+    passwordSaveBtn.disabled = true;
+    passwordSaveBtn.textContent = "Menyimpan...";
+
+    fetch("/api/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword: currentPassword, newUsername: newUsername, newPassword: newPassword })
+    })
+      .then(function (res) {
+        return res.json().then(function (data) {
+          return { ok: res.ok, data: data };
+        });
+      })
+      .then(function (result) {
+        if (result.ok) {
+          window.location.href = "/login.html";
+        } else {
+          passwordError.textContent = result.data.error || "Gagal mengganti password.";
+          passwordError.style.display = "block";
+        }
+      })
+      .catch(function () {
+        passwordError.textContent = "Tidak bisa menghubungi server.";
+        passwordError.style.display = "block";
+      })
+      .finally(function () {
+        passwordSaveBtn.disabled = false;
+        passwordSaveBtn.textContent = "Simpan password baru";
+      });
+  });
+
   // ---- Photo handling (resize before sending, keeps DB light) ----
   function readAndResizeImage(file, cb) {
     var reader = new FileReader();
