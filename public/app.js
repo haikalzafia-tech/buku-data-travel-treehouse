@@ -194,7 +194,7 @@
   var cancelBtn = document.getElementById("cancelBtn");
   var saveBtn = document.getElementById("saveBtn");
 
-  var fields = ["no", "nama", "travel", "telepon", "bank", "ket"];
+  var fields = ["no", "nama", "travel", "telepon", "member", "ket"];
   function fieldEl(name) {
     return document.getElementById("f_" + name);
   }
@@ -273,7 +273,7 @@
   function matchesSearch(entry, q) {
     if (!q) return true;
     q = q.toLowerCase();
-    return ["no", "nama", "travel", "telepon", "bank", "ket"].some(function (f) {
+    return ["no", "nama", "travel", "telepon", "member", "ket"].some(function (f) {
       return (entry[f] || "").toLowerCase().indexOf(q) > -1;
     });
   }
@@ -305,7 +305,7 @@
           "<td>" + esc(e.nama) + "</td>" +
           "<td>" + esc(e.travel) + "</td>" +
           "<td>" + esc(e.telepon) + "</td>" +
-          "<td>" + esc(e.bank) + "</td>" +
+          "<td>" + esc(e.member) + "</td>" +
           '<td class="foto-col">' + photoCell + "</td>" +
           '<td class="ket-col">' + esc(e.ket) + "</td>" +
           '<td class="aksi-col">' +

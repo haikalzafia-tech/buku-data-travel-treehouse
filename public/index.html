@@ -44,8 +44,12 @@
         <label for="f_telepon">No HP / Telepon</label>
         <input type="tel" id="f_telepon" placeholder="08xx-xxxx-xxxx">
 
-        <label for="f_bank">Bank</label>
-        <input type="text" id="f_bank" placeholder="Contoh: BCA">
+        <label for="f_member">Member dari mana</label>
+        <select id="f_member" required>
+          <option value="" disabled selected>-- Pilih member --</option>
+          <option value="TH">TH</option>
+          <option value="BF">BF</option>
+        </select>
 
         <label for="f_foto">Foto</label>
         <div class="photo-drop" id="photoDrop">
@@ -77,7 +81,7 @@
               <th>Nama</th>
               <th>Travel</th>
               <th>No HP/Telepon</th>
-              <th>Bank</th>
+              <th>Member</th>
               <th style="width:70px;">Foto</th>
               <th>Keterangan</th>
               <th style="width:120px;">Aksi</th>

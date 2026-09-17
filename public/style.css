@@ -165,7 +165,7 @@
     margin:14px 0 5px;
   }
   label:first-of-type{ margin-top:0; }
-  input[type="text"], input[type="tel"], textarea{
+  input[type="text"], input[type="tel"], input[type="password"], textarea, select{
     width:100%;
     font-family:inherit;
     font-size:14px;
@@ -174,6 +174,15 @@
     border-radius:var(--radius);
     background:var(--paper);
     color:var(--ink);
+  }
+  select{
+    appearance:none;
+    -webkit-appearance:none;
+    background-image:linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%), linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
+    background-position: calc(100% - 18px) center, calc(100% - 13px) center;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat:no-repeat;
+    cursor:pointer;
   }
   input:focus, textarea:focus, button:focus-visible{
     outline:2px solid var(--teal);

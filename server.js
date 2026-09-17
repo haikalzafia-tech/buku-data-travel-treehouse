@@ -142,7 +142,7 @@ app.get("/api/export", requireAuth, async (req, res) => {
       { header: "NAMA", key: "nama", width: 22 },
       { header: "TRAVEL", key: "travel", width: 18 },
       { header: "NO HP/TELEPON", key: "telepon", width: 18 },
-      { header: "BANK", key: "bank", width: 14 },
+      { header: "MEMBER", key: "member", width: 12 },
       { header: "FOTO", key: "foto", width: 14 },
       { header: "KETERANGAN", key: "ket", width: 28 }
     ];
@@ -158,7 +158,7 @@ app.get("/api/export", requireAuth, async (req, res) => {
         nama: e.nama || "",
         travel: e.travel || "",
         telepon: e.telepon || "",
-        bank: e.bank || "",
+        member: e.member || "",
         foto: "",
         ket: e.ket || ""
       });
