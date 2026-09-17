@@ -8,7 +8,7 @@ const ExcelJS = require("exceljs");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const DATA_DIR = path.join(__dirname, "data");
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "data");
 const DB_FILE = path.join(DATA_DIR, "db.json");
 const CONFIG_FILE = path.join(DATA_DIR, "config.json");
 
@@ -23,6 +23,7 @@ if (!fs.existsSync(CONFIG_FILE)) {
     JSON.stringify({ username: "admin", password: "admin" }, null, 2)
   );
 }
+console.log("Menyimpan database di:", DATA_DIR);
 
 function readDB() {
   return JSON.parse(fs.readFileSync(DB_FILE, "utf-8"));
@@ -35,7 +36,7 @@ function readConfig() {
 }
 
 // ---- Middleware ----
-app.use(express.json({ limit: "40mb" }));
+app.use(express.json({ limit: "80mb" }));
 app.use(
   session({
     secret: "ubah-secret-ini-sebelum-dipakai-serius",
@@ -130,6 +131,12 @@ app.post("/api/entries/bulk", requireAuth, (req, res) => {
       skipped++;
       return;
     }
+    let fotos = [];
+    if (Array.isArray(raw.fotos)) {
+      fotos = raw.fotos.filter(Boolean);
+    } else if (raw.foto) {
+      fotos = [raw.foto];
+    }
     const entry = {
       id: crypto.randomUUID(),
       no: (raw.no || "").toString().trim() || String(db.entries.length + 1),
@@ -137,7 +144,7 @@ app.post("/api/entries/bulk", requireAuth, (req, res) => {
       travel: (raw.travel || "").toString().trim(),
       telepon: (raw.telepon || "").toString().trim(),
       member: (raw.member || "").toString().trim(),
-      foto: raw.foto || null,
+      fotos: fotos,
       ket: (raw.ket || "").toString()
     };
     db.entries.push(entry);
@@ -165,22 +172,46 @@ app.delete("/api/entries/:id", requireAuth, (req, res) => {
   res.json({ ok: true, deleted: before - db.entries.length });
 });
 
+// ---- Hapus semua data (untuk koreksi/reset sebelum impor ulang) ----
+app.delete("/api/entries", requireAuth, (req, res) => {
+  const db = readDB();
+  const count = db.entries.length;
+  db.entries = [];
+  writeDB(db);
+  res.json({ ok: true, deleted: count });
+});
+
 // ---- Export to Excel (server-side, with embedded photos) ----
+function getFotosArr(entry) {
+  if (Array.isArray(entry.fotos)) return entry.fotos.filter(Boolean);
+  if (entry.foto) return [entry.foto];
+  return [];
+}
+
 app.get("/api/export", requireAuth, async (req, res) => {
   try {
     const db = readDB();
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Data Kartu");
 
-    sheet.columns = [
+    const maxFotos = db.entries.reduce((max, e) => Math.max(max, getFotosArr(e).length), 0) || 1;
+
+    const baseColumns = [
       { header: "NO", key: "no", width: 10 },
       { header: "NAMA", key: "nama", width: 22 },
       { header: "TRAVEL", key: "travel", width: 18 },
       { header: "NO HP/TELEPON", key: "telepon", width: 18 },
-      { header: "MEMBER", key: "member", width: 12 },
-      { header: "FOTO", key: "foto", width: 14 },
-      { header: "KETERANGAN", key: "ket", width: 28 }
+      { header: "MEMBER", key: "member", width: 12 }
     ];
+    const fotoColumns = [];
+    for (let i = 0; i < maxFotos; i++) {
+      fotoColumns.push({ header: maxFotos > 1 ? `FOTO ${i + 1}` : "FOTO", key: `foto${i}`, width: 14 });
+    }
+    const fotoStartIndex = baseColumns.length; // 0-based column index where photos begin
+    sheet.columns = baseColumns.concat(fotoColumns, [
+      { header: "KETERANGAN", key: "ket", width: 28 }
+    ]);
+
     sheet.getRow(1).font = { bold: true };
     sheet.getRow(1).eachCell((cell) => {
       cell.border = { bottom: { style: "medium" } };
@@ -188,32 +219,33 @@ app.get("/api/export", requireAuth, async (req, res) => {
 
     let rowIndex = 2;
     db.entries.forEach((e) => {
-      const row = sheet.addRow({
+      const rowData = {
         no: e.no || "",
         nama: e.nama || "",
         travel: e.travel || "",
         telepon: e.telepon || "",
         member: e.member || "",
-        foto: "",
         ket: e.ket || ""
-      });
+      };
+      const row = sheet.addRow(rowData);
       row.height = 60;
       row.eachCell((cell) => {
         cell.alignment = { vertical: "middle", wrapText: true };
         cell.border = { bottom: { style: "thin", color: { argb: "FFDAD2BE" } } };
       });
 
-      if (e.foto) {
-        const match = e.foto.match(/^data:image\/(png|jpeg|jpg);base64,(.*)$/);
+      const fotos = getFotosArr(e);
+      fotos.forEach((foto, i) => {
+        const match = foto.match(/^data:image\/(png|jpeg|jpg);base64,(.*)$/);
         if (match) {
           const ext = match[1] === "jpg" ? "jpeg" : match[1];
-          const imgId = workbook.addImage({ base64: e.foto, extension: ext });
+          const imgId = workbook.addImage({ base64: foto, extension: ext });
           sheet.addImage(imgId, {
-            tl: { col: 5, row: rowIndex - 1 },
+            tl: { col: fotoStartIndex + i, row: rowIndex - 1 },
             ext: { width: 60, height: 60 }
           });
         }
-      }
+      });
       rowIndex++;
     });
 

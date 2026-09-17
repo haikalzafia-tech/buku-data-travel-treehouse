@@ -24,6 +24,7 @@
       <button class="ghost" id="importBtn">Impor data</button>
       <input type="file" id="importFile" accept="application/json" style="display:none;">
       <button class="ghost" id="passwordBtn">Ganti password</button>
+      <button class="danger" id="deleteAllBtn">Hapus semua data</button>
       <button class="ghost" id="logoutBtn">Keluar</button>
     </div>
   </header>
@@ -55,9 +56,9 @@
 
         <label for="f_foto">Foto</label>
         <div class="photo-drop" id="photoDrop">
-          <span id="photoLabel">Klik untuk unggah foto</span>
+          <span id="photoLabel">Klik untuk unggah foto (bisa pilih lebih dari satu)</span>
         </div>
-        <input type="file" id="f_foto" accept="image/*">
+        <input type="file" id="f_foto" accept="image/*" multiple>
 
         <label for="f_ket">Keterangan</label>
         <textarea id="f_ket" placeholder="Catatan tambahan (opsional)"></textarea>

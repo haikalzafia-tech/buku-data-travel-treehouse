@@ -3,7 +3,14 @@
 
   var entries = [];
   var editingId = null;
-  var pendingPhoto = null;
+  var pendingPhotos = [];
+
+  function getFotos(entry) {
+    if (!entry) return [];
+    if (Array.isArray(entry.fotos)) return entry.fotos.filter(Boolean);
+    if (entry.foto) return [entry.foto];
+    return [];
+  }
 
   // ---- API helpers ----
   function api(path, options) {
@@ -120,6 +127,30 @@
     reader.readAsText(file);
   });
 
+  // ---- Hapus semua data ----
+  document.getElementById("deleteAllBtn").addEventListener("click", function () {
+    if (entries.length === 0) {
+      showToast("Tidak ada data untuk dihapus.");
+      return;
+    }
+    var confirmText = prompt(
+      'Ini akan menghapus SEMUA ' + entries.length + ' data secara permanen dan tidak bisa dibatalkan.\n' +
+      'Ketik "HAPUS" (huruf besar) untuk konfirmasi:'
+    );
+    if (confirmText !== "HAPUS") {
+      if (confirmText !== null) showToast("Dibatalkan — teks konfirmasi tidak cocok.");
+      return;
+    }
+    api("/api/entries", { method: "DELETE" })
+      .then(function (result) {
+        showToast(result.deleted + " data berhasil dihapus.");
+        return loadEntries();
+      })
+      .catch(function (err) {
+        showToast(err.message || "Gagal menghapus data.");
+      });
+  });
+
   // ---- Ganti password ----
   var passwordModal = document.getElementById("passwordModal");
   var passwordForm = document.getElementById("passwordForm");
@@ -221,28 +252,58 @@
     photoInput.click();
   });
   photoInput.addEventListener("change", function () {
-    var file = photoInput.files && photoInput.files[0];
-    if (!file) return;
-    readAndResizeImage(file, function (dataUrl) {
-      if (!dataUrl) {
-        showToast("Gagal membaca foto.");
-        return;
-      }
-      pendingPhoto = dataUrl;
-      renderPhotoPreview();
+    var files = Array.prototype.slice.call(photoInput.files || []);
+    if (files.length === 0) return;
+
+    var pending = files.length;
+    files.forEach(function (file) {
+      readAndResizeImage(file, function (dataUrl) {
+        if (dataUrl) pendingPhotos.push(dataUrl);
+        pending--;
+        if (pending === 0) {
+          renderPhotoPreview();
+          photoInput.value = "";
+        }
+      });
     });
   });
 
+  function removePendingPhoto(index) {
+    pendingPhotos.splice(index, 1);
+    renderPhotoPreview();
+  }
+
   function renderPhotoPreview() {
-    if (pendingPhoto) {
+    if (pendingPhotos.length > 0) {
       photoDrop.classList.add("has-photo");
       photoDrop.innerHTML = "";
-      var img = document.createElement("img");
-      img.src = pendingPhoto;
-      photoDrop.appendChild(img);
+      var grid = document.createElement("div");
+      grid.className = "photo-grid";
+      pendingPhotos.forEach(function (src, idx) {
+        var item = document.createElement("div");
+        item.className = "photo-item";
+        var img = document.createElement("img");
+        img.src = src;
+        var removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "photo-remove";
+        removeBtn.textContent = "×";
+        removeBtn.addEventListener("click", function (ev) {
+          ev.stopPropagation();
+          removePendingPhoto(idx);
+        });
+        item.appendChild(img);
+        item.appendChild(removeBtn);
+        grid.appendChild(item);
+      });
+      var addMore = document.createElement("div");
+      addMore.className = "photo-add-more";
+      addMore.textContent = "+ Tambah foto";
+      grid.appendChild(addMore);
+      photoDrop.appendChild(grid);
     } else {
       photoDrop.classList.remove("has-photo");
-      photoDrop.innerHTML = '<span id="photoLabel">Klik untuk unggah foto</span>';
+      photoDrop.innerHTML = '<span id="photoLabel">Klik untuk unggah foto (bisa pilih lebih dari satu)</span>';
     }
   }
 
@@ -260,7 +321,7 @@
 
   function resetForm() {
     editingId = null;
-    pendingPhoto = null;
+    pendingPhotos = [];
     form.reset();
     renderPhotoPreview();
     formTitle.textContent = "Tambah data";
@@ -278,7 +339,7 @@
     fields.forEach(function (f) {
       fieldEl(f).value = entry[f] || "";
     });
-    pendingPhoto = entry.foto || null;
+    pendingPhotos = getFotos(entry).slice();
     renderPhotoPreview();
     formTitle.textContent = "Ubah data";
     formSub.textContent = "No " + (entry.no || "-") + " — " + (entry.nama || "");
@@ -293,7 +354,7 @@
     fields.forEach(function (f) {
       data[f] = fieldEl(f).value.trim();
     });
-    data.foto = pendingPhoto || null;
+    data.fotos = pendingPhotos.slice();
 
     if (!data.nama) {
       showToast("Nama wajib diisi.");
@@ -365,9 +426,15 @@
 
     tableBody.innerHTML = visible
       .map(function (e) {
-        var photoCell = e.foto
-          ? '<img src="' + e.foto + '" data-full="' + e.foto + '" class="thumb" alt="Foto ' + esc(e.nama) + '">'
-          : '<div class="no-photo">—</div>';
+        var fotos = getFotos(e);
+        var photoCell;
+        if (fotos.length === 0) {
+          photoCell = '<div class="no-photo">—</div>';
+        } else {
+          photoCell = '<div class="thumb-stack">' + fotos.map(function (src) {
+            return '<img src="' + src + '" data-full="' + src + '" class="thumb" alt="Foto ' + esc(e.nama) + '">';
+          }).join("") + "</div>";
+        }
         return (
           '<tr data-id="' + e.id + '">' +
           '<td class="no-col">' + esc(e.no) + "</td>" +

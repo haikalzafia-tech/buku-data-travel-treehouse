@@ -56,7 +56,49 @@ buku-data-travel-treehouse/
     style.css
 ```
 
-## Catatan keamanan
+## ⚠️ PENTING: Kenapa data suka hilang & cara mencegahnya permanen
+
+Railway (dan hosting sejenis) itu **container sementara** — setiap kali ada
+deploy baru (baik karena kamu push kode, atau Railway restart sendiri),
+seluruh isi container dibuat ulang dari nol. Kalau database (`data/db.json`)
+disimpan di dalam folder project biasa, dia ikut ke-reset setiap saat itu
+terjadi — makanya data yang diinput manual bisa tiba-tiba hilang.
+
+**Solusi permanen: pakai Railway Volume** (disk terpisah yang tidak ikut
+di-reset). Sudah disiapkan di kode ini lewat environment variable `DATA_DIR`.
+
+### Cara setup (cuma perlu sekali):
+
+1. Buka project kamu di Railway, klik service `buku-data-travel-treehouse`
+2. Masuk ke tab **Settings** → cari bagian **Volumes**
+3. Klik **New Volume**, isi:
+   - Mount path: `/data`
+   - Ukuran: default (biasanya 1GB, lebih dari cukup)
+4. Masuk ke tab **Variables**, tambahkan environment variable baru:
+   - Key: `DATA_DIR`
+   - Value: `/data`
+5. Railway otomatis redeploy setelah kamu tambah volume/variable.
+   Setelah ini, `data/db.json` disimpan di volume permanen, **bukan** lagi
+   ikut kode — jadi berapa kali pun kamu update & push kode ke GitHub,
+   data yang sudah ada di dalam aplikasi TIDAK akan pernah ikut terhapus.
+
+⚠️ Karena ini disk baru yang kosong, **kamu perlu impor ulang data yang ada
+satu kali terakhir** setelah volume ini aktif. Setelah itu, aman selamanya.
+
+## Data lama sudah ter-commit di Git — bersihkan referensinya
+
+Kalau sebelumnya folder `data/` sempat ke-push ke GitHub, jalankan ini
+sekali di folder project kamu (setelah menambahkan `.gitignore` yang baru)
+supaya Git berhenti melacak folder tersebut:
+
+```bash
+git rm -r --cached data
+git add .
+git commit -m "berhenti melacak folder data, sudah pakai Railway Volume"
+git push
+```
+
+
 
 - Password admin disimpan polos (plain text) di `data/config.json` demi
   kesederhanaan — cukup aman untuk pemakaian pribadi, tapi **jangan pakai
