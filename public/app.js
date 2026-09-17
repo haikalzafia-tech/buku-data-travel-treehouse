@@ -61,6 +61,65 @@
     });
   });
 
+  // ---- Impor data (dari file JSON hasil olahan Excel) ----
+  var importBtn = document.getElementById("importBtn");
+  var importFile = document.getElementById("importFile");
+
+  importBtn.addEventListener("click", function () {
+    importFile.click();
+  });
+
+  importFile.addEventListener("change", function () {
+    var file = importFile.files && importFile.files[0];
+    if (!file) return;
+
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      var data;
+      try {
+        data = JSON.parse(ev.target.result);
+      } catch (err) {
+        showToast("File JSON tidak valid.");
+        importFile.value = "";
+        return;
+      }
+
+      var list = Array.isArray(data) ? data : data.entries;
+      if (!Array.isArray(list) || list.length === 0) {
+        showToast("Tidak ada data di dalam file ini.");
+        importFile.value = "";
+        return;
+      }
+
+      if (!confirm("Impor " + list.length + " data ke database? Data ini akan ditambahkan, bukan menimpa data yang sudah ada.")) {
+        importFile.value = "";
+        return;
+      }
+
+      importBtn.disabled = true;
+      importBtn.textContent = "Mengimpor...";
+
+      api("/api/entries/bulk", { method: "POST", body: JSON.stringify({ entries: list }) })
+        .then(function (result) {
+          showToast(result.added + " data berhasil diimpor" + (result.skipped ? ", " + result.skipped + " dilewati (tanpa nama)." : "."));
+          return loadEntries();
+        })
+        .catch(function (err) {
+          showToast(err.message || "Gagal mengimpor data.");
+        })
+        .finally(function () {
+          importBtn.disabled = false;
+          importBtn.textContent = "Impor data";
+          importFile.value = "";
+        });
+    };
+    reader.onerror = function () {
+      showToast("Gagal membaca file.");
+      importFile.value = "";
+    };
+    reader.readAsText(file);
+  });
+
   // ---- Ganti password ----
   var passwordModal = document.getElementById("passwordModal");
   var passwordForm = document.getElementById("passwordForm");

@@ -35,7 +35,7 @@ function readConfig() {
 }
 
 // ---- Middleware ----
-app.use(express.json({ limit: "20mb" }));
+app.use(express.json({ limit: "40mb" }));
 app.use(
   session({
     secret: "ubah-secret-ini-sebelum-dipakai-serius",
@@ -111,6 +111,41 @@ app.post("/api/entries", requireAuth, (req, res) => {
   db.entries.push(entry);
   writeDB(db);
   res.json(entry);
+});
+
+// ---- Bulk import (untuk data lama dari Excel) ----
+app.post("/api/entries/bulk", requireAuth, (req, res) => {
+  const incoming = (req.body && req.body.entries) || [];
+  if (!Array.isArray(incoming) || incoming.length === 0) {
+    return res.status(400).json({ error: "Tidak ada data untuk diimpor." });
+  }
+
+  const db = readDB();
+  let added = 0;
+  let skipped = 0;
+
+  incoming.forEach((raw) => {
+    const nama = (raw.nama || "").toString().trim();
+    if (!nama) {
+      skipped++;
+      return;
+    }
+    const entry = {
+      id: crypto.randomUUID(),
+      no: (raw.no || "").toString().trim() || String(db.entries.length + 1),
+      nama: nama,
+      travel: (raw.travel || "").toString().trim(),
+      telepon: (raw.telepon || "").toString().trim(),
+      member: (raw.member || "").toString().trim(),
+      foto: raw.foto || null,
+      ket: (raw.ket || "").toString()
+    };
+    db.entries.push(entry);
+    added++;
+  });
+
+  writeDB(db);
+  res.json({ ok: true, added: added, skipped: skipped, total: db.entries.length });
 });
 
 app.put("/api/entries/:id", requireAuth, (req, res) => {
