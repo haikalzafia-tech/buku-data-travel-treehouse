@@ -226,6 +226,17 @@
     flex-wrap:wrap;
   }
   .table-toolbar input[type="text"]{ max-width:260px; }
+  .toolbar-right{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .toolbar-right select{
+    width:auto;
+    min-width:140px;
+    font-weight:600;
+    padding:8px 32px 8px 12px;
+  }
   .count-tag{
     font-size:12px;
     color:var(--ink-soft);

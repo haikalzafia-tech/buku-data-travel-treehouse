@@ -269,6 +269,7 @@
   var countTag = document.getElementById("countTag");
   var filterTag = document.getElementById("filterTag");
   var searchBox = document.getElementById("searchBox");
+  var memberFilter = document.getElementById("memberFilter");
 
   function matchesSearch(entry, q) {
     if (!q) return true;
@@ -278,14 +279,23 @@
     });
   }
 
+  function matchesMemberFilter(entry, memberValue) {
+    if (!memberValue) return true;
+    return entry.member === memberValue;
+  }
+
   function render() {
     var q = searchBox.value.trim();
+    var memberValue = memberFilter.value;
     var visible = entries.filter(function (e) {
-      return matchesSearch(e, q);
+      return matchesSearch(e, q) && matchesMemberFilter(e, memberValue);
     });
 
     countTag.textContent = entries.length + " data tersimpan";
-    filterTag.textContent = q ? visible.length + " hasil ditemukan" : "";
+    var activeFilters = [];
+    if (q) activeFilters.push('"' + q + '"');
+    if (memberValue) activeFilters.push(memberValue);
+    filterTag.textContent = activeFilters.length ? visible.length + " hasil ditemukan" : "";
 
     if (entries.length === 0) {
       tableBody.innerHTML = "";
@@ -346,6 +356,7 @@
   });
 
   searchBox.addEventListener("input", render);
+  memberFilter.addEventListener("change", render);
 
   // ---- Lightbox ----
   var lightbox = document.getElementById("lightbox");
