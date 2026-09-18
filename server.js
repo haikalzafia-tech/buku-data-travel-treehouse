@@ -36,7 +36,7 @@ function readConfig() {
 }
 
 // ---- Middleware ----
-app.use(express.json({ limit: "80mb" }));
+app.use(express.json({ limit: "15mb" }));
 app.use(
   session({
     secret: "ubah-secret-ini-sebelum-dipakai-serius",

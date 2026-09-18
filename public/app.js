@@ -103,22 +103,59 @@
         return;
       }
 
-      importBtn.disabled = true;
-      importBtn.textContent = "Mengimpor...";
+      // Bagi jadi beberapa batch berdasarkan perkiraan ukuran (bukan cuma jumlah),
+      // supaya aman dari batas ukuran request meski foto-fotonya besar/banyak.
+      var MAX_BATCH_BYTES = 6 * 1024 * 1024; // ~6MB per batch, aman di bawah limit server
+      var batches = [];
+      var currentBatch = [];
+      var currentSize = 0;
+      list.forEach(function (entry) {
+        var entrySize = JSON.stringify(entry).length;
+        if (currentBatch.length > 0 && currentSize + entrySize > MAX_BATCH_BYTES) {
+          batches.push(currentBatch);
+          currentBatch = [];
+          currentSize = 0;
+        }
+        currentBatch.push(entry);
+        currentSize += entrySize;
+      });
+      if (currentBatch.length > 0) batches.push(currentBatch);
 
-      api("/api/entries/bulk", { method: "POST", body: JSON.stringify({ entries: list }) })
-        .then(function (result) {
-          showToast(result.added + " data berhasil diimpor" + (result.skipped ? ", " + result.skipped + " dilewati (tanpa nama)." : "."));
-          return loadEntries();
-        })
-        .catch(function (err) {
-          showToast(err.message || "Gagal mengimpor data.");
-        })
-        .finally(function () {
+      importBtn.disabled = true;
+      var totalAdded = 0;
+      var totalSkipped = 0;
+      var batchIndex = 0;
+
+      function runNextBatch() {
+        if (batchIndex >= batches.length) {
           importBtn.disabled = false;
           importBtn.textContent = "Impor data";
           importFile.value = "";
-        });
+          showToast(totalAdded + " data berhasil diimpor" + (totalSkipped ? ", " + totalSkipped + " dilewati." : "."));
+          loadEntries();
+          return;
+        }
+        importBtn.textContent = "Mengimpor... (" + (batchIndex + 1) + "/" + batches.length + ")";
+        api("/api/entries/bulk", { method: "POST", body: JSON.stringify({ entries: batches[batchIndex] }) })
+          .then(function (result) {
+            totalAdded += result.added || 0;
+            totalSkipped += result.skipped || 0;
+            batchIndex++;
+            runNextBatch();
+          })
+          .catch(function (err) {
+            importBtn.disabled = false;
+            importBtn.textContent = "Impor data";
+            importFile.value = "";
+            showToast(
+              "Berhenti di batch " + (batchIndex + 1) + "/" + batches.length + ": " +
+              (err.message || "gagal") + ". " + totalAdded + " data sudah sempat masuk sebelum error."
+            );
+            loadEntries();
+          });
+      }
+
+      runNextBatch();
     };
     reader.onerror = function () {
       showToast("Gagal membaca file.");
