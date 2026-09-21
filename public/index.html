@@ -16,21 +16,27 @@
   <header class="top">
     <div class="title-block">
       <h1>Buku Data Travel Treehouse</h1>
-      <p>Catat kartu, hitung otomatis rapi, ekspor ke Excel kapan saja.</p>
+      <p>Catat kartu, hitung otomatis rapi, ekspor ke Excel kapan saja. <span class="role-tag" id="roleTag"></span></p>
     </div>
     <div class="top-actions">
       <span class="count-tag" id="countTag">0 data tersimpan</span>
-      <button class="primary" id="exportBtn">Ekspor ke Excel</button>
-      <button class="ghost" id="importBtn">Impor data</button>
+      <button class="ghost" id="exportBtn">Ekspor ke Excel</button>
+      <button class="ghost" id="importBtn" data-admin-only>Impor data</button>
       <input type="file" id="importFile" accept="application/json" style="display:none;">
-      <button class="ghost" id="passwordBtn">Ganti password</button>
-      <button class="danger" id="deleteAllBtn">Hapus semua data</button>
+      <button class="ghost" id="passwordBtn" data-admin-only>Ganti password</button>
+      <button class="danger" id="deleteAllBtn" data-admin-only>Hapus semua data</button>
       <button class="ghost" id="logoutBtn">Keluar</button>
     </div>
   </header>
 
+  <!-- Pencarian cepat nomor kartu -->
+  <div class="quick-search card">
+    <label for="noSearchBox">🔎 Cari cepat pakai Nomor Kartu</label>
+    <input type="text" id="noSearchBox" placeholder="Ketik nomor kartu, contoh: A001 atau GA3">
+  </div>
+
   <div class="layout">
-    <section class="card form-card">
+    <section class="card form-card" data-admin-only>
       <h2 id="formTitle">Tambah data</h2>
       <p class="sub" id="formSub">Isi field di bawah lalu simpan.</p>
 
@@ -70,17 +76,17 @@
       </form>
     </section>
 
-    <section>
+    <section class="table-section">
       <div class="table-toolbar">
-        <input type="text" id="searchBox" placeholder="Cari nama, travel, no HP...">
-      <div class="toolbar-right">
-        <select id="memberFilter">
-          <option value="">Semua member</option>
-          <option value="TH">TH</option>
-          <option value="BF">BF</option>
-        </select>
-        <span class="count-tag" id="filterTag"></span>
-      </div>
+        <input type="text" id="searchBox" placeholder="Cari nama, travel, no HP, keterangan...">
+        <div class="toolbar-right">
+          <select id="memberFilter">
+            <option value="">Semua member</option>
+            <option value="TH">TH</option>
+            <option value="BF">BF</option>
+          </select>
+          <span class="count-tag" id="filterTag"></span>
+        </div>
       </div>
 
       <div class="ledger">
@@ -102,42 +108,59 @@
       </div>
       <div class="empty-state" id="emptyState" style="display:none;">
         <span class="mark">Belum ada data</span>
-        Tambahkan data pertama lewat form di sebelah kiri.
+        Coba kata kunci lain, atau tambahkan data baru lewat form.
+      </div>
+
+      <div class="pagination">
+        <button type="button" class="ghost" id="prevPageBtn">‹ Sebelumnya</button>
+        <span id="pageInfo">Halaman 1 dari 1</span>
+        <button type="button" class="ghost" id="nextPageBtn">Berikutnya ›</button>
       </div>
     </section>
   </div>
 
   <footer class="note">
-    Data disimpan di server (database pribadi kamu) — bisa diakses dari HP, laptop, atau perangkat lain selama login sebagai admin.
+    Data disimpan di server (database PostgreSQL) — bisa diakses dari HP (iOS/Android), laptop, atau perangkat lain kapan saja, selama login.
   </footer>
 </div>
 
 <div class="lightbox" id="lightbox">
+  <button type="button" class="lb-nav lb-prev" id="lbPrev">‹</button>
   <img id="lightboxImg" src="" alt="Foto diperbesar">
+  <button type="button" class="lb-nav lb-next" id="lbNext">›</button>
+  <div class="lb-counter" id="lightboxCounter"></div>
 </div>
 
 <div class="modal-overlay" id="passwordModal">
   <div class="modal-card">
-    <h2>Ganti password admin</h2>
-    <p class="sub">Setelah berhasil, kamu akan otomatis logout dan perlu login ulang.</p>
+    <h2>Ganti password</h2>
+    <p class="sub">Setelah berhasil, kamu akan otomatis logout dan perlu login ulang. Kosongkan bagian yang tidak ingin diubah.</p>
 
     <form id="passwordForm">
-      <label for="pw_current">Password saat ini</label>
+      <label for="pw_current">Password admin saat ini</label>
       <input type="password" id="pw_current" required>
 
-      <label for="pw_username">Username baru</label>
+      <label for="pw_username">Username admin baru</label>
       <input type="text" id="pw_username" placeholder="Kosongkan jika tidak diubah">
 
-      <label for="pw_new">Password baru</label>
-      <input type="password" id="pw_new" required minlength="4">
+      <label for="pw_new">Password admin baru</label>
+      <input type="password" id="pw_new" placeholder="Kosongkan jika tidak diubah" minlength="4">
 
-      <label for="pw_confirm">Ulangi password baru</label>
-      <input type="password" id="pw_confirm" required minlength="4">
+      <label for="pw_confirm">Ulangi password admin baru</label>
+      <input type="password" id="pw_confirm" placeholder="Kosongkan jika tidak diubah" minlength="4">
+
+      <hr style="border-color:var(--line); margin:16px 0;">
+
+      <label for="pw_member_new">Password anggota baru</label>
+      <input type="password" id="pw_member_new" placeholder="Kosongkan jika tidak diubah" minlength="4">
+
+      <label for="pw_member_confirm">Ulangi password anggota baru</label>
+      <input type="password" id="pw_member_confirm" placeholder="Kosongkan jika tidak diubah" minlength="4">
 
       <div id="passwordError" class="login-error" style="display:none;"></div>
 
       <div class="form-actions">
-        <button type="submit" class="primary" id="passwordSaveBtn">Simpan password baru</button>
+        <button type="submit" class="primary" id="passwordSaveBtn">Simpan perubahan</button>
         <button type="button" class="ghost" id="passwordCancelBtn">Batal</button>
       </div>
     </form>
